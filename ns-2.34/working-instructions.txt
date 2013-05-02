@@ -1,0 +1,116 @@
+﻿INSTRUCTIONS FOR RATE ADAPTIVE VIDEO MULTICAST TRANSMISSION. THIS WORK IS BASED ON RA-Evalvid, ASMP and TFMCC.
+Author: Georgios Kioumourtzis, University of Patras, Computer Engineering and Informatics Department, Rion, Greece
+e-mail:gkioumou@ceid.upatras.gr
+
+Multi-Evalvid-RA has embedded functionality for rate adaptive video transmission in the multicast domain. The installation instructions  for the interface between Multi-Evalvid-RA and ns2 are desribed in the README.txt (I used the version ns-2.30 but I beleive Multi-Evalvid-RA runs on any newer version).  Here I have added the "working instructions" on how you can use Multi-Evalvid-RA for your simulations with ns2. 
+
+These instructions are written for a Linux platform (I use fedora 8)
+A useful web page is  http://www.tkn.tu-berlin.de/research/evalvid/EvalVid/docevalvid.html
+Tutorials for Evalvid RA-Evalvid can be found in:
+http://www.item.ntnu.no/~arnelie/Evalvid-RA.htm and the page 
+http://hpds.ee.ncku.edu.tw/~smallko/ns2/Evalvid_in_NS2.htm you can find sources and instructions.
+A good media player to watch video files is in the page http://www.videolan.org/
+
+############################################ PRE-PROCESSING##########################################################
+
+1.	First you should create a folder which will be your working space. In your working space you store your 	 	 programs,simulation scripts and traces files for post-processing. For me it works like that: 
+	
+	/root/multi-evalvid-ra/tcl-examples
+
+2.	Now we need to create the .m4v files with different quality. Thus we should create video files with different BW 		requirements.The best quality in the one with quantizer scale q=2 and the lowest with quantizer scale q=31.
+	These files are used by MP4 program that creates the  st_$3_Q$i.txt files. We will need these files during 
+	the pre-processing.The server chooses the next GoP from 1 of these files based on network conditions.
+	We use the manyQ.sh to create these files. We need to put the path for MP4 program. For me it works like:
+	
+	MP4=/root/multi-evalvid-ra/tcl-examples/MP4
+	where /root/multi-evalvid-ra/tcl-examples the path to your working directory. Modify this path to your needs. 
+	
+	IMPORTANT: If you use .exe executable you should download wine for LINUX from: http://www.winehq.org/
+	You need also to install ffmpeg from the site: http://ffmpeg.mplayerhq.hu/
+	Also download yuv files from http://trace.eas.asu.edu/yuv/index.html
+	After wine and ffmpeg installation you should execute the next set of instructions:
+
+	./manyQ.sh 2 31 concat_cif.yuv
+
+	contact_cif.yuv is a raw video in YUV format. We can use the "cat" to combine two or more yuv files:
+
+	cat file1.yuv file2.yuv > concat.yuv
+
+ 	This raw video is encoded from ffmpeg into mpeg4 video. Therefore, we have now 30 mpeg4 video files. The MP4 program 		transmits these files and keeps the traces in the form 	st_concat_cif.yuv_Q$i.txt. We need these traces for the pre 		and post-processing.
+
+3.	Now it is time to run the simulation scripts. We will start first with a simple script named simple-asmp.tcl. This 		is a simple scenario of 1 sender that transmits the video file to a set of 2 multicast ASMP receivers. We use RTP 		for the transmission and the RTCP protocol for feedback functions between the server and the receivers.  We have 		added also TCP background traffic. The same scenario with TFMCC is in the file simple-tfmcc.tcl You can modify these 		scripts for your simulations. 
+	IMPORTANT: The "switch" to shift between ASMP and TFMCC is in the file vbr_rateadapt.cc. Cancel out #define TFMCC 		accordingly and recompile. Otherwise you will get segmentation fault.
+	
+############################################ POST-PROCESSING##########################################################
+4.	After the simulation we get a number of simulation traces. We will use the sd_be_0 (trace file for the sender) 
+	and the trace files of the two receivers (rd_be_1 and rd_be_2). The program et_ra creates the video as "seen" by 		each receiver. For each receiver you need to run the command:
+
+ et_ra sd_be_0 rd_be_1 st_concat_cif.yuv_Q2.txt video2.dat concat_cif.yuv_Q  2 31 frame_size.dat test1.m4v 01
+
+	OUTPUTS:
+	*** loss_01.txt ***: percentage of lost [frames|packets]
+   	column 1: I
+   	column 2: P
+    	column 3: B
+    	column 4: overall
+
+	*** delay_01.txt ***: delay statisctics in seconds
+	column 1: frame number
+   	column 2: lost flag (1 when frame is lost)
+    	column 3: End-to-end delay
+    	column 4: Intra-frame sender delay
+	column 5: Intra-frame receiver delay
+	column 6: Inter-frame delay (Jitter delay)
+	comumn 7: Cumulative jitter
+
+	*** test1.m4v ***
+	The video file as seen by receiver 1. 
+
+5.	Next we transform the test1.m4v into yuv format and create the test1.yuv
+	
+	ffmpeg -r 25 -i test1.m4v -vcodec rawvideo test1.yuv 
+
+6.	Now we are ready to get the PSNR for receiver 1. 
+ 	
+	wine psnr.exe 352 288  420 concat_cif.yuv test1.yuv > psnr_1.txt 
+
+	Possible PSNR to MOS conversion.
+	PSNR[dB]        MOS
+	>37		5 (Excellent)
+	31-37		4 (Good)
+	25-31		3 (Fair)
+	20-25		2 (Poor)
+	<20		1 (Bad)
+
+7.	PSNR does not tell us much and we probably need to get the MOS (Mean Opinion Score) values. This is an objective 		quality metric to measure the perceived video quality as seen by the end user. I wrote a simple awk script to get 		the mos.txt. This file is ready for xgraph plotting and provides also the average MOS of the received video.
+
+	awk -f mos.awk psnr_1.txt 
+
+8.	Other useful metrics are the jitter and the cumulative jitter. We obtain these metrics from the awk scripts. I have 		added the awk program written by Arme Lie to get Jain's fairness Index of the flows. The command is:
+	
+	awk -f jain.awk avg.txt
+
+9.	We can get delay measurements with the delay_results.sh. Use the output for xgraph plotting.
+
+10.	The "awk" folder contains useful awk programs to get simulation results for easy plotting. Read the awk-commands.txt 		to understand the usage of these programs.	
+ 
+11. 	We can also watch the video as seen by the receiver with the YUVviewer.exe program
+	
+	wine YUVviewer.exe 
+
+12. 	For buffer or delay constrains read the RA-Evalvid commands.txt of the original RA-Evalvid version. 
+
+13.	I suggest you also use an IDE with ns-2. Read my instructions: http://gkioumou.googlepages.com/home on how to use 		KDevelop to compile ns2.
+
+14.	Report any bugs to gkioumou@ceid.upatras.gr 
+
+
+
+
+
+	
+
+
+
+
+

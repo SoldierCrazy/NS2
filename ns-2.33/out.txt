@@ -1,0 +1,66 @@
+create-wireless-node
+instproc add-interface_nifs: 1
+instproc add-interface_nifs: 2
+instproc add-interface_nifs: 3
+mobienode.tcl
+numifs: 3 
+nifs: 3
+Ad hoc routing agent setup needs special handling
+Node/MobileNode_add
+create-wireless-node
+instproc add-interface_nifs: 1
+instproc add-interface_nifs: 2
+mobienode.tcl
+numifs: 2 
+nifs: 2
+Ad hoc routing agent setup needs special handling
+Node/MobileNode_add
+create-wireless-node
+instproc add-interface_nifs: 1
+instproc add-interface_nifs: 2
+mobienode.tcl
+numifs: 2 
+nifs: 2
+Ad hoc routing agent setup needs special handling
+Node/MobileNode_add
+create-wireless-node
+instproc add-interface_nifs: 1
+mobienode.tcl
+numifs: 1 
+nifs: 1
+Ad hoc routing agent setup needs special handling
+Node/MobileNode_add
+create-wireless-node
+instproc add-interface_nifs: 1
+mobienode.tcl
+numifs: 1 
+nifs: 1
+Ad hoc routing agent setup needs special handling
+Node/MobileNode_add
+create-wireless-node
+instproc add-interface_nifs: 1
+instproc add-interface_nifs: 2
+mobienode.tcl
+numifs: 2 
+nifs: 2
+Ad hoc routing agent setup needs special handling
+Node/MobileNode_add
+mobienode.tcl
+numifs: 3 
+nifs: 3
+mobienode.tcl
+numifs: 1 
+nifs: 1
+mobienode.tcl
+numifs: 1 
+nifs: 3
+mobienode.tcl
+numifs: 1 
+nifs: 1
+mobienode.tcl
+numifs: 1 
+nifs: 3
+mobienode.tcl
+numifs: 1 
+nifs: 2
+Starting Simulation...
